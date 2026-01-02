@@ -2,12 +2,12 @@
 
 import Link from 'next/link'
 import Image from 'next/image'
-import { useSession } from 'next-auth/react'
 import ThemeSwitcher from '@/components/layout/ThemeSwitcher'
 import Button from '@/components/ui/Button'
+import { useAuth } from '@lib/auth/auth/AuthProvider'
 
 export default function Header() {
-  const { data: session } = useSession()
+  const { user, token } = useAuth()
 
   return (
     <header className="flex items-center justify-between py-4 px-6 border-b border-border bg-surface">
@@ -17,15 +17,11 @@ export default function Header() {
 
       <div className="flex items-center gap-4">
         <ThemeSwitcher />
-        {session ? (
+        {user && token ? (
           <Link href="/profile">
-            <Image
-              src={session.user?.image || '/avatar.png'}
-              alt={session.user?.name || 'کاربر'}
-              width={32}
-              height={32}
-              className="rounded-full"
-            />
+            <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-white text-sm font-bold">
+              {user.name?.charAt(0) || user.email?.charAt(0) || 'U'}
+            </div>
           </Link>
         ) : (
           <Link href="/auth">

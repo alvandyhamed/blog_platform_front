@@ -1,7 +1,7 @@
 'use client'
 
 import MainLayout from './MainLayout'
-import AuthButton from '@/components/molecules/AuthButton'
+import GoogleLoginButton from '@/components/molecules/GoogleLoginButton'
 
 export default function AuthTemplate() {
   return (
@@ -11,7 +11,7 @@ export default function AuthTemplate() {
         <p className="text-text-secondary text-sm text-center max-w-md">
           برای نوشتن، لایک کردن یا ثبت نظر وارد حساب گوگل خود شوید.
         </p>
-        <AuthButton />
+        <GoogleLoginButton />
       </div>
     </MainLayout>
   )

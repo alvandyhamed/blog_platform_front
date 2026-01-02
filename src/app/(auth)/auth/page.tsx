@@ -30,7 +30,7 @@ export default function AuthPage() {
     // اگر login موفق بود، token را از query parameter یا cookie بخوان
     if (loginSuccess === 'success') {
       const tokenFromQuery = searchParams.get('token')
-      
+
       if (tokenFromQuery) {
         // ذخیره در localStorage و login
         login(tokenFromQuery)
@@ -42,39 +42,15 @@ export default function AuthPage() {
           .split('; ')
           .find(row => row.startsWith('token='))
           ?.split('=')[1]
-        
+
         if (token) {
           login(token)
           router.replace('/')
         }
       }
     }
+
   }, [loginSuccess, login, searchParams, router])
-
-  useEffect(() => {
-    // اگر خطایی از callback آمده
-    if (error) {
-      setLoading(false)
-    }
-  }, [error])
-
-  // اگر در حال loading است، loading نمایش بده
-  if (isLoading) {
-    return (
-      <MainLayout>
-        <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-          <p className="text-text-secondary text-sm">در حال بررسی...</p>
-        </div>
-      </MainLayout>
-    )
-  }
-
-  // اگر کاربر لاگین شده، چیزی نمایش نده (redirect می‌شود)
-  // فقط اگر هم user و هم token وجود داشته باشد
-  if (user && token) {
-    return null
-  }
 
   return (
     <MainLayout>

@@ -23,7 +23,7 @@ export default function ThemeSwitcher() {
       onClick={toggleTheme}
       className="px-3 py-1 text-sm border rounded bg-surface text-text-primary border-border hover:opacity-80 transition-opacity"
     >
-      {theme === 'dark' ? '☀️ لایت مود' : '🌙 دارک مود'}
+      {theme === 'dark' ? '☀️' : '🌙'}
     </button>
   )
 }

@@ -13,12 +13,12 @@ type Props = {
 }
 
 export default function AuthButton({ onClick, children = 'ورود با گوگل', disabled, className }: Props) {
+  const Component = onClick ? 'button' : 'div'
   return (
-    <Button
+    <Component
       onClick={onClick}
-      variant="secondary"
+      className={clsx('flex items-center gap-2 font-iran px-4 py-2 bg-secondary text-text-primary rounded hover:bg-opacity-80 transition-colors', className)}
       disabled={disabled}
-      className={clsx('flex items-center gap-2 font-iran', className)}
     >
       <Image
         src="/icons/google.svg"
@@ -27,6 +27,6 @@ export default function AuthButton({ onClick, children = 'ورود با گوگل
         height={18}
       />
       {children}
-    </Button>
+    </Component>
   )
 }

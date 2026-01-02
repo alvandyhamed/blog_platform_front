@@ -12,7 +12,7 @@ export default function Header() {
   return (
     <header className="flex items-center justify-between py-4 px-6 border-b border-border bg-surface">
       <Link href="/" className="text-xl font-bold text-primary font-iran">
-        🔐 وبلاگ امنیتی
+        🔐 وبلاگ111 امنیتی
       </Link>
 
       <div className="flex items-center gap-4">

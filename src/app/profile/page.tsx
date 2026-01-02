@@ -33,9 +33,9 @@ export default function ProfilePage() {
         <h1 className="text-2xl font-bold text-primary">👤 پروفایل کاربری</h1>
 
         <div className="flex items-center gap-4">
-          {user.avatar_url ? (
+          {user.avatar_Url ? (
             <Image
-              src={user.avatar_url}
+              src={user.avatar_Url}
               alt={user.display_name || user.name || 'User'}
               width={64}
               height={64}

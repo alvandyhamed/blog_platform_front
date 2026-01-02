@@ -16,6 +16,7 @@ export default function HomePage() {
   useEffect(() => {
     // اگر login موفق بود و token در query parameter است
     if (loginSuccess === 'success' && tokenFromQuery) {
+      console.log('Home page: login success, token:', tokenFromQuery)
       login(tokenFromQuery)
       // پاک کردن query parameters از URL
       router.replace('/')
@@ -25,7 +26,8 @@ export default function HomePage() {
   return (
     <MainLayout>
       <h1 className="text-2xl font-bold mb-4">به وبلاگ امنیتی خوش آمدید 🔐</h1>
-      <p>آخرین مقالات، آموزش‌ها و نکات امنیتی را اینجا بخوانید.</p>
+      <p>آخرین مقالات، آموزش‌ها و نکات امنیتی را اینجا بخوا11نید.</p>
+      <p>سلام</p>
     </MainLayout>
   )
 }

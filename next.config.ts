@@ -8,6 +8,17 @@ const nextConfig: NextConfig = {
   },
   /* config options here */
   reactCompiler: true,
+  headers: async () => [
+    {
+      source: '/(.*)',
+      headers: [
+        {
+          key: 'Cross-Origin-Opener-Policy',
+          value: 'unsafe-none',
+        },
+      ],
+    },
+  ],
 };
 
 export default nextConfig;

@@ -6,11 +6,16 @@ import Image from 'next/image'
 import ThemeSwitcher from '@/components/layout/ThemeSwitcher'
 import Button from '@/components/ui/Button'
 import { useAuth } from '@lib/auth/auth/AuthProvider'
+import GoogleLoginButton from '@/components/molecules/GoogleLoginButton'
 
 export default function Header() {
   const { user, token, logout } = useAuth()
   const [showMenu, setShowMenu] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
+
+
+
+
 
   // بستن منو وقتی خارج از آن کلیک می‌شود
   useEffect(() => {
@@ -29,6 +34,7 @@ export default function Header() {
     }
   }, [showMenu])
 
+
   const handleLogout = () => {
     logout()
     setShowMenu(false)
@@ -37,7 +43,7 @@ export default function Header() {
   return (
     <header className="flex items-center justify-between py-4 px-6 border-b border-border bg-surface">
       <Link href="/" className="text-xl font-bold text-primary font-iran">
-        🔐 وبلاگ امنیتی
+        وبلاگ امنیتی
       </Link>
 
       <div className="flex items-center gap-4">
@@ -45,12 +51,18 @@ export default function Header() {
         {user && token ? (
           <div className="relative" ref={menuRef}>
             <button
-              onClick={() => setShowMenu(!showMenu)}
+              onClick={
+                () => setShowMenu(!showMenu)
+
+              }
               className="flex items-center gap-2 hover:opacity-80 transition-opacity"
             >
-              {user.avatar_url ? (
+
+
+
+              {user.avatar_Url ? (
                 <Image
-                  src={user.avatar_url}
+                  src={user.avatar_Url}
                   alt={user.display_name || user.name || 'User'}
                   width={32}
                   height={32}
@@ -93,9 +105,7 @@ export default function Header() {
             )}
           </div>
         ) : (
-          <Link href="/auth">
-            <Button variant="primary">ورود با گوگل</Button>
-          </Link>
+          <GoogleLoginButton />
         )}
       </div>
     </header>

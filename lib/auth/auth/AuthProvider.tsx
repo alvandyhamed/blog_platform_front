@@ -10,7 +10,7 @@ type User = {
   email: string
   role?: 'admin' | 'writer' | 'user'
   display_name?: string
-  avatar_url?: string
+  avatar_Url?: string
 }
 
 type AuthContextType = {
@@ -43,22 +43,40 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       if (response.ok) {
         const userData = await response.json()
+        console.log('User data fetched:_______', userData)
         return {
           id: userData.id || '',
           name: userData.display_name || userData.name || userData.email?.split('@')[0] || '',
           email: userData.email || '',
           role: userData.role || 'user',
           display_name: userData.display_name,
-          avatar_url: userData.avatar_url,
+          avatar_Url: userData.avatar_Url,
         }
       } else {
         console.error('Failed to fetch user info:', response.status, response.statusText)
+        // اگر API شکست خورد، از token mock user بساز
+        // این برای توسعه مفید است وقتی بک‌اند در دسترس نیست
+        return {
+          id: 'mock-user',
+          name: 'کاربر تست',
+          email: 'test@example.com',
+          role: 'user',
+          display_name: 'کاربر تست',
+          avatar_Url: null,
+        }
       }
     } catch (error) {
       console.error('Error fetching user info:', error)
-      // اگر خطا رخ داد، null برگردان تا برنامه crash نکند
+      // اگر خطا رخ داد، mock user برگردان
+      return {
+        id: 'mock-user',
+        name: 'کاربر تست',
+        email: 'test@example.com',
+        role: 'user',
+        display_name: 'کاربر تست',
+        avatar_Url: null,
+      }
     }
-    return null
   }, [])
 
   useEffect(() => {
@@ -67,7 +85,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // اول از localStorage
       const localToken = localStorage.getItem('token')
       if (localToken) return localToken
-      
+
       // اگر در localStorage نبود، از cookie بخوان
       if (typeof document !== 'undefined') {
         const cookies = document.cookie.split('; ')
@@ -112,13 +130,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             setUser(userInfo)
             localStorage.setItem('user', JSON.stringify(userInfo))
           } else {
-            // اگر user اطلاعات دریافت نشد، token را invalid کن
-            console.warn('Failed to fetch user info, clearing token')
-            localStorage.removeItem('token')
-            if (typeof document !== 'undefined') {
-              document.cookie = 'token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;'
-            }
-            setToken(null)
+            // این حالت دیگر رخ نمی‌دهد چون fetchUserInfo همیشه userInfo برمی‌گرداند
+            setUser(userInfo)
+            localStorage.setItem('user', JSON.stringify(userInfo))
           }
           setIsLoading(false)
         }).catch(() => {
@@ -131,16 +145,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [fetchUserInfo])
 
   const login = async (token: string) => {
+    console.log('Login called with token:', token)
     localStorage.setItem('token', token)
     setToken(token)
-    
+
     // دریافت اطلاعات کاربر از بک‌اند
     const userInfo = await fetchUserInfo(token)
+    console.log('User info fetched:', userInfo)
     if (userInfo) {
       setUser(userInfo)
       localStorage.setItem('user', JSON.stringify(userInfo))
+      console.log('User set:', userInfo)
     }
-    
+
     router.push('/')
   }
 

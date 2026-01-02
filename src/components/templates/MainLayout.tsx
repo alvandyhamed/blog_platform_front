@@ -1,6 +1,7 @@
-import Header from '@/components/organisms/AuthGuard/AuthGuard'
+// import Header from '@/components/organisms/AuthGuard/AuthGuard'
 import Footer from '@/components/organisms/Footer/Footer'
 import { ReactNode } from 'react'
+import Header from '../organisms/Header/Header'
 
 type Props = {
   children: ReactNode

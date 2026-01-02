@@ -1,17 +1,31 @@
 'use client'
 
-import { useSession, signOut } from 'next-auth/react'
+import { useRouter } from 'next/navigation'
+import { useEffect } from 'react'
 import MainLayout from '../../components/templates/MainLayout'
 import Image from 'next/image'
 import Button from '../../components/ui/Button'
+import { useAuth } from '@lib/auth/auth/AuthProvider'
 
 export default function ProfilePage() {
-  const { data: session, status } = useSession()
+  const { user, token, logout } = useAuth()
+  const router = useRouter()
 
-  if (status === 'loading') return <p className="p-6">در حال بارگذاری...</p>
-  if (!session) return <p className="p-6">برای مشاهده پروفایل، وارد شوید.</p>
+  useEffect(() => {
+    if (!user || !token) {
+      router.push('/auth')
+    }
+  }, [user, token, router])
 
-  const user = session.user
+  if (!user || !token) {
+    return (
+      <MainLayout>
+        <div className="p-6">
+          <p>در حال بارگذاری...</p>
+        </div>
+      </MainLayout>
+    )
+  }
 
   return (
     <MainLayout>
@@ -19,21 +33,27 @@ export default function ProfilePage() {
         <h1 className="text-2xl font-bold text-primary">👤 پروفایل کاربری</h1>
 
         <div className="flex items-center gap-4">
-          <Image
-            src={user?.image || '/avatar.png'}
-            alt={user?.name || 'User'}
-            width={64}
-            height={64}
-            className="rounded-full"
-          />
+          {user.avatar_url ? (
+            <Image
+              src={user.avatar_url}
+              alt={user.display_name || user.name || 'User'}
+              width={64}
+              height={64}
+              className="rounded-full"
+            />
+          ) : (
+            <div className="w-16 h-16 rounded-full bg-primary flex items-center justify-center text-white text-2xl font-bold">
+              {(user.display_name || user.name || user.email)?.charAt(0) || 'U'}
+            </div>
+          )}
           <div>
-            <p className="font-bold text-lg">{user?.name}</p>
-            <p className="text-text-secondary text-sm">{user?.email}</p>
+            <p className="font-bold text-lg">{user.display_name || user.name}</p>
+            <p className="text-text-secondary text-sm">{user.email}</p>
           </div>
         </div>
 
         <div>
-          <Button variant="danger" onClick={() => signOut()}>
+          <Button variant="danger" onClick={logout}>
             خروج از حساب
           </Button>
         </div>

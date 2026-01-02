@@ -1,19 +1,30 @@
 // src/app/(auth)/auth/page.tsx
 'use client'
 
-import { useSearchParams, useRouter } from 'next/navigation'
+import { useSearchParams, useRouter, usePathname } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import MainLayout from '@/components/templates/MainLayout'
 import { useAuth } from '@lib/auth/auth/AuthProvider'
 import GoogleLoginButton from '@/components/molecules/GoogleLoginButton'
 
 export default function AuthPage() {
-  const { login } = useAuth()
+  const { login, user, token, isLoading } = useAuth()
   const searchParams = useSearchParams()
   const router = useRouter()
+  const pathname = usePathname()
   const error = searchParams.get('error')
   const loginSuccess = searchParams.get('login')
   const [loading, setLoading] = useState(false)
+  const [hasRedirected, setHasRedirected] = useState(false)
+
+  // اگر کاربر قبلاً لاگین شده، به صفحه اصلی redirect کن
+  // فقط بعد از اینکه loading تمام شد
+  useEffect(() => {
+    if (!isLoading && user && token && !hasRedirected && pathname === '/auth') {
+      setHasRedirected(true)
+      router.replace('/')
+    }
+  }, [user, token, isLoading, router, pathname, hasRedirected])
 
   useEffect(() => {
     // اگر login موفق بود، token را از query parameter یا cookie بخوان
@@ -46,6 +57,24 @@ export default function AuthPage() {
       setLoading(false)
     }
   }, [error])
+
+  // اگر در حال loading است، loading نمایش بده
+  if (isLoading) {
+    return (
+      <MainLayout>
+        <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+          <p className="text-text-secondary text-sm">در حال بررسی...</p>
+        </div>
+      </MainLayout>
+    )
+  }
+
+  // اگر کاربر لاگین شده، چیزی نمایش نده (redirect می‌شود)
+  // فقط اگر هم user و هم token وجود داشته باشد
+  if (user && token) {
+    return null
+  }
 
   return (
     <MainLayout>

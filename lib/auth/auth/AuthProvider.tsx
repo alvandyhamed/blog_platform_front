@@ -1,14 +1,16 @@
 // src/lib/auth/AuthProvider.tsx
 'use client'
 
-import { createContext, useContext, useEffect, useState } from 'react'
+import { createContext, useContext, useEffect, useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 
 type User = {
-  id: string
+  id?: string
   name: string
   email: string
-  role: 'admin' | 'writer' | 'user'
+  role?: 'admin' | 'writer' | 'user'
+  display_name?: string
+  avatar_url?: string
 }
 
 type AuthContextType = {
@@ -16,6 +18,7 @@ type AuthContextType = {
   token: string | null
   login: (token: string) => void
   logout: () => void
+  isLoading: boolean
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -23,10 +26,43 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined)
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [token, setToken] = useState<string | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
   const router = useRouter()
 
+  // تابع برای دریافت اطلاعات کاربر از بک‌اند
+  const fetchUserInfo = useCallback(async (token: string) => {
+    try {
+      // استفاده از API route در Next.js برای جلوگیری از CORS
+      const response = await fetch('/api/auth/user', {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      })
+
+      if (response.ok) {
+        const userData = await response.json()
+        return {
+          id: userData.id || '',
+          name: userData.display_name || userData.name || userData.email?.split('@')[0] || '',
+          email: userData.email || '',
+          role: userData.role || 'user',
+          display_name: userData.display_name,
+          avatar_url: userData.avatar_url,
+        }
+      } else {
+        console.error('Failed to fetch user info:', response.status, response.statusText)
+      }
+    } catch (error) {
+      console.error('Error fetching user info:', error)
+      // اگر خطا رخ داد، null برگردان تا برنامه crash نکند
+    }
+    return null
+  }, [])
+
   useEffect(() => {
-    // خواندن token از localStorage یا cookie
+    // خواندن token و user از localStorage
     const getToken = () => {
       // اول از localStorage
       const localToken = localStorage.getItem('token')
@@ -43,93 +79,84 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return null
     }
 
+    const getSavedUser = () => {
+      const savedUser = localStorage.getItem('user')
+      if (savedUser) {
+        try {
+          return JSON.parse(savedUser)
+        } catch {
+          return null
+        }
+      }
+      return null
+    }
+
     const savedToken = getToken()
+    const savedUser = getSavedUser()
+
     if (savedToken) {
       setToken(savedToken)
       // ذخیره در localStorage هم برای سازگاری
       if (!localStorage.getItem('token')) {
         localStorage.setItem('token', savedToken)
       }
-      try {
-        // بررسی اینکه token فرمت JWT دارد یا نه
-        const parts = savedToken.split('.')
-        if (parts.length !== 3) {
-          // اگر token فرمت JWT ندارد، ممکن است یک string ساده باشد
-          console.warn('Token is not in JWT format, treating as plain token')
-          // می‌توانیم از API برای decode کردن استفاده کنیم یا token را به همین صورت نگه داریم
-          return
-        }
-        
-        // Decode کردن payload از JWT
-        const payload = JSON.parse(atob(parts[1]))
-        if (payload.user) {
-          setUser(payload.user)
-        } else if (payload.email) {
-          // اگر user در payload نیست، از email و name استفاده می‌کنیم
-          setUser({
-            id: payload.sub || payload.id || '',
-            name: payload.name || payload.email?.split('@')[0] || '',
-            email: payload.email || '',
-            role: payload.role || 'user',
-          })
-        }
-      } catch (error) {
-        console.error('Error decoding token:', error)
-        // اگر token معتبر نیست، آن را پاک می‌کنیم
-        localStorage.removeItem('token')
-        if (typeof document !== 'undefined') {
-          document.cookie = 'token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;'
-        }
-        setToken(null)
-        setUser(null)
-      }
-    }
-  }, [])
 
-  const login = (token: string) => {
-    localStorage.setItem('token', token)
-    setToken(token)
-    try {
-      // بررسی اینکه token فرمت JWT دارد یا نه
-      const parts = token.split('.')
-      if (parts.length !== 3) {
-        // اگر token فرمت JWT ندارد، ممکن است یک string ساده باشد
-        console.warn('Token is not in JWT format, treating as plain token')
-        // می‌توانیم از API برای دریافت اطلاعات کاربر استفاده کنیم
-        // یا token را به همین صورت نگه داریم
-        router.push('/')
-        return
-      }
-      
-      // Decode کردن payload از JWT
-      const payload = JSON.parse(atob(parts[1]))
-      if (payload.user) {
-        setUser(payload.user)
-      } else if (payload.email) {
-        setUser({
-          id: payload.sub || payload.id || '',
-          name: payload.name || payload.email?.split('@')[0] || '',
-          email: payload.email || '',
-          role: payload.role || 'user',
+      // اگر user اطلاعات در localStorage هست، استفاده کن
+      if (savedUser) {
+        setUser(savedUser)
+        setIsLoading(false)
+      } else {
+        // اگر user اطلاعات نیست، از API بگیر
+        fetchUserInfo(savedToken).then((userInfo) => {
+          if (userInfo) {
+            setUser(userInfo)
+            localStorage.setItem('user', JSON.stringify(userInfo))
+          } else {
+            // اگر user اطلاعات دریافت نشد، token را invalid کن
+            console.warn('Failed to fetch user info, clearing token')
+            localStorage.removeItem('token')
+            if (typeof document !== 'undefined') {
+              document.cookie = 'token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;'
+            }
+            setToken(null)
+          }
+          setIsLoading(false)
+        }).catch(() => {
+          setIsLoading(false)
         })
       }
-    } catch (error) {
-      console.error('Error decoding token:', error)
-      // اگر token decode نمی‌شود، باز هم token را نگه می‌داریم
-      // ممکن است بک‌اند از فرمت دیگری استفاده کند
+    } else {
+      setIsLoading(false)
     }
+  }, [fetchUserInfo])
+
+  const login = async (token: string) => {
+    localStorage.setItem('token', token)
+    setToken(token)
+    
+    // دریافت اطلاعات کاربر از بک‌اند
+    const userInfo = await fetchUserInfo(token)
+    if (userInfo) {
+      setUser(userInfo)
+      localStorage.setItem('user', JSON.stringify(userInfo))
+    }
+    
     router.push('/')
   }
 
   const logout = () => {
     localStorage.removeItem('token')
+    localStorage.removeItem('user')
+    if (typeof document !== 'undefined') {
+      document.cookie = 'token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;'
+    }
     setUser(null)
     setToken(null)
     router.push('/')
   }
 
   return (
-    <AuthContext.Provider value={{ user, token, login, logout }}>
+    <AuthContext.Provider value={{ user, token, login, logout, isLoading }}>
       {children}
     </AuthContext.Provider>
   )
